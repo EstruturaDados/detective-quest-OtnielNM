@@ -1,47 +1,142 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-// Desafio Detective Quest
-// Tema 4 - Árvores e Tabela Hash
-// Este código inicial serve como base para o desenvolvimento das estruturas de navegação, pistas e suspeitos.
-// Use as instruções de cada região para desenvolver o sistema completo com árvore binária, árvore de busca e tabela hash.
+// Definição da estrutura de cada sala (Nó da Árvore)
+typedef struct Sala {
+    char nome[50];
+    struct Sala *esquerda; // Caminho para a sala à esquerda
+    struct Sala *direita;  // Caminho para a sala à direita
+} Sala;
 
+/**
+ * @brief Aloca e inicializa uma nova sala.
+ * @param nome O nome da nova sala.
+ * @param esquerda O ponteiro para a sala à esquerda (ou NULL).
+ * @param direita O ponteiro para a sala à direita (ou NULL).
+ * @return O ponteiro para a nova sala criada.
+ */
+Sala* criarSala(const char *nome, Sala *esquerda, Sala *direita) {
+    Sala *novaSala = (Sala*)malloc(sizeof(Sala));
+    if (novaSala == NULL) {
+        perror("Erro ao alocar memória para a sala");
+        exit(EXIT_FAILURE);
+    }
+    // Copia o nome da sala
+    strncpy(novaSala->nome, nome, sizeof(novaSala->nome) - 1);
+    novaSala->nome[sizeof(novaSala->nome) - 1] = '\0'; // Garantir terminação nula
+    
+    novaSala->esquerda = esquerda;
+    novaSala->direita = direita;
+    return novaSala;
+}
+
+/**
+ * @brief Libera a memória de toda a árvore (limpeza).
+ * @param raiz O ponteiro para a raiz da subárvore a ser liberada.
+ */
+void liberarArvores(Sala *raiz) {
+    if (raiz != NULL) {
+        liberarArvores(raiz->esquerda);
+        liberarArvores(raiz->direita);
+        printf("Liberando: %s\n", raiz->nome);
+        free(raiz);
+    }
+}
+
+/**
+ * @brief Função principal de exploração interativa da mansão.
+ * @param raiz O ponteiro para o Hall de Entrada (raiz da árvore).
+ */
+void explorarSalas(Sala *raiz) {
+    Sala *atual = raiz;
+    char escolha;
+
+    printf("\n--- Bem-vindo à Mansão Mistério! ---\n");
+    printf("Você está no %s.\n", atual->nome);
+
+    // Loop principal de exploração
+    while (atual != NULL) {
+        // Verifica se a sala atual é um nó-folha (fim do caminho)
+        if (atual->esquerda == NULL && atual->direita == NULL) {
+            printf("\n Fim do Caminho! Esta sala não tem mais portas.\n");
+            break; 
+        }
+
+        // Exibe opções de navegação
+        printf("\nOnde deseja ir? ");
+        if (atual->esquerda != NULL) {
+            printf("(**e** - Esquerda: %s)", atual->esquerda->nome);
+        }
+        if (atual->direita != NULL) {
+            if (atual->esquerda != NULL) printf(" | ");
+            printf("(**d** - Direita: %s)", atual->direita->nome);
+        }
+        printf(" | (**s** - Sair)\n");
+        printf("Sua escolha: ");
+        
+        // Leitura da escolha do usuário
+        if (scanf(" %c", &escolha) != 1) {
+            // Lidar com erro de leitura (raro)
+            break; 
+        }
+
+        // Processamento da escolha
+        if (escolha == 'e' || escolha == 'E') {
+            if (atual->esquerda != NULL) {
+                atual = atual->esquerda;
+                printf("\nVocê entrou no **%s**.\n", atual->nome);
+            } else {
+                printf("\n Não há sala à esquerda. Tente outra direção.\n");
+            }
+        } else if (escolha == 'd' || escolha == 'D') {
+            if (atual->direita != NULL) {
+                atual = atual->direita;
+                printf("\nVocê entrou no **%s**.\n", atual->nome);
+            } else {
+                printf("\n Não há sala à direita. Tente outra direção.\n");
+            }
+        } else if (escolha == 's' || escolha == 'S') {
+            printf("\n Saindo da exploração. Até a próxima!\n");
+            break;
+        } else {
+            printf("\n Opção inválida. Use 'e', 'd' ou 's'.\n");
+        }
+    }
+    
+    if (atual == NULL) {
+        printf("\nErro na exploração: o ponteiro da sala atual é NULL.\n");
+    }
+}
+
+// --------------------- FUNÇÃO PRINCIPAL ---------------------
 int main() {
+    // 1. Definição estática da Árvore Binária da Mansão
+    // Criando os nós-folha (nível mais baixo)
+    Sala *sala_segredos = criarSala("Sala dos Segredos", NULL, NULL);
+    Sala *jardim_inverno = criarSala("Jardim de Inverno", NULL, NULL);
+    Sala *deposito = criarSala("Depósito de Velharias", NULL, NULL);
+    Sala *quarto_crianca = criarSala("Quarto da Criança", NULL, NULL);
 
-    // 🌱 Nível Novato: Mapa da Mansão com Árvore Binária
-    //
-    // - Crie uma struct Sala com nome, e dois ponteiros: esquerda e direita.
-    // - Use funções como criarSala(), conectarSalas() e explorarSalas().
-    // - A árvore pode ser fixa: Hall de Entrada, Biblioteca, Cozinha, Sótão etc.
-    // - O jogador deve poder explorar indo à esquerda (e) ou à direita (d).
-    // - Finalize a exploração com uma opção de saída (s).
-    // - Exiba o nome da sala a cada movimento.
-    // - Use recursão ou laços para caminhar pela árvore.
-    // - Nenhuma inserção dinâmica é necessária neste nível.
+    // Nível intermediário (filhos apontam para os nós-folha)
+    Sala *biblioteca = criarSala("Biblioteca Antiga", sala_segredos, jardim_inverno);
+    Sala *escritorio = criarSala("Escritório do Mordomo", deposito, quarto_crianca);
 
-    // 🔍 Nível Aventureiro: Armazenamento de Pistas com Árvore de Busca
-    //
-    // - Crie uma struct Pista com campo texto (string).
-    // - Crie uma árvore binária de busca (BST) para inserir as pistas coletadas.
-    // - Ao visitar salas específicas, adicione pistas automaticamente com inserirBST().
-    // - Implemente uma função para exibir as pistas em ordem alfabética (emOrdem()).
-    // - Utilize alocação dinâmica e comparação de strings (strcmp) para organizar.
-    // - Não precisa remover ou balancear a árvore.
-    // - Use funções para modularizar: inserirPista(), listarPistas().
-    // - A árvore de pistas deve ser exibida quando o jogador quiser revisar evidências.
+    // Nível superior (filhos apontam para os nós intermediários)
+    Sala *sala_jantar = criarSala("Sala de Jantar", NULL, escritorio);
+    Sala *corredor = criarSala("Corredor Principal", biblioteca, sala_jantar);
 
-    // 🧠 Nível Mestre: Relacionamento de Pistas com Suspeitos via Hash
-    //
-    // - Crie uma struct Suspeito contendo nome e lista de pistas associadas.
-    // - Crie uma tabela hash (ex: array de ponteiros para listas encadeadas).
-    // - A chave pode ser o nome do suspeito ou derivada das pistas.
-    // - Implemente uma função inserirHash(pista, suspeito) para registrar relações.
-    // - Crie uma função para mostrar todos os suspeitos e suas respectivas pistas.
-    // - Adicione um contador para saber qual suspeito foi mais citado.
-    // - Exiba ao final o “suspeito mais provável” baseado nas pistas coletadas.
-    // - Para hashing simples, pode usar soma dos valores ASCII do nome ou primeira letra.
-    // - Em caso de colisão, use lista encadeada para tratar.
-    // - Modularize com funções como inicializarHash(), buscarSuspeito(), listarAssociacoes().
+    // Raiz da Árvore (Início da Exploração)
+    Sala *hall_entrada = criarSala("Hall de Entrada", corredor, NULL); // Apenas Corredor à esquerda
+
+    printf("Mapa da Mansão (Árvore Binária) Criado com Sucesso!\n");
+    // 
+
+    // 2. Iniciar a Exploração
+    explorarSalas(hall_entrada);
+
+    // 3. Limpeza de Memória
+    liberarArvores(hall_entrada);
 
     return 0;
 }
-
